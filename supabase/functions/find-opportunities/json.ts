@@ -79,3 +79,4 @@ export function asFiniteNumber(value: unknown, fallback = 0): number {
 export function clampScore(value: unknown): number {
   return Math.round(Math.min(100, Math.max(0, asFiniteNumber(value))))
 }
+
