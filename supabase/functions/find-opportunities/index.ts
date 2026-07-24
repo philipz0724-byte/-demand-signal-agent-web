@@ -5,6 +5,7 @@ import {
   executeSearch,
   flattenSearchPlan,
   generateSearchPlan,
+  mapValueChain,
   normalizeProject,
   normalizeResults,
   scoreCompanies,
@@ -25,44 +26,54 @@ Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   let projectId = ''
+  let stage = 'request_validation'
   let projectSettings: Record<string, unknown> = {}
   let supabase: ReturnType<typeof createClient> | null = null
 
   try {
-    const authHeader = request.headers.get('Authorization')
-    if (!authHeader) throw new Error('Missing authorization header')
-
+    // The Supabase gateway verifies the publishable key/JWT before this handler runs.
+    // Do not require an Authorization header here: new publishable keys may arrive via `apikey`.
     const supabaseUrl = requiredEnvironmentVariable('SUPABASE_URL')
     const serviceRoleKey = requiredEnvironmentVariable('SUPABASE_SERVICE_ROLE_KEY')
     supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false },
     })
 
-    const requestBody = await request.json() as {
+    const requestBody = await readRequestBody(request) as {
       project_id?: unknown
       target_count?: unknown
     }
     projectId = typeof requestBody.project_id === 'string'
       ? requestBody.project_id.trim()
       : ''
-    if (!projectId) throw new Error('project_id is required')
+    if (!projectId) throw new HttpError(400, 'project_id is required', 'INVALID_PROJECT_ID')
 
+    stage = 'project_lookup'
     const { data, error } = await supabase
       .from('prospecting_projects')
       .select('*')
       .eq('id', projectId)
       .single()
-    if (error || !data) throw new Error(error?.message || 'Project not found')
+    if (error?.code === 'PGRST116' || !data) {
+      throw new HttpError(404, 'Project not found', 'PROJECT_NOT_FOUND')
+    }
+    if (error) throw new HttpError(500, error.message, error.code || 'PROJECT_LOOKUP_FAILED')
 
     const project = normalizeProject(data as ProjectRecord)
-    if (!project.website) throw new Error('Project website is required')
+    if (!project.website) {
+      throw new HttpError(400, 'Project website is required', 'WEBSITE_REQUIRED')
+    }
     projectSettings = asRecord((data as Record<string, unknown>).settings)
+    stage = 'status_update'
     const { error: statusError } = await supabase
       .from('prospecting_projects')
       .update({ status: 'analyzing' })
       .eq('id', projectId)
-    if (statusError) throw new Error(statusError.message)
+    if (statusError) {
+      throw new HttpError(500, statusError.message, statusError.code || 'STATUS_UPDATE_FAILED')
+    }
 
+    stage = 'configuration'
     const config: EngineConfig = {
       openAI: {
         apiKey: requiredEnvironmentVariable('OPENAI_API_KEY'),
@@ -73,24 +84,45 @@ Deno.serve(async (request) => {
         apiKey: requiredEnvironmentVariable('TAVILY_API_KEY'),
         concurrency: boundedInteger(Deno.env.get('SEARCH_CONCURRENCY'), 12, 1, 20),
       },
+      diagnostics: [],
     }
     const targetCount = boundedInteger(requestBody.target_count, 15, 1, 25)
 
-    // Each stage owns one commercial-intelligence responsibility and has a safe fallback.
+    // Each stage owns one factory-export responsibility and has a safe fallback.
+    stage = 'factory_intelligence'
     const intelligence = await analyzeCompany(project, config)
-    const icp = await buildICP(project, intelligence, config)
-    const searchPlan = await generateSearchPlan(project, intelligence, icp, config)
+    stage = 'value_chain_mapping'
+    const valueChain = await mapValueChain(project, intelligence, config)
+    stage = 'buyer_profile_and_search_planning'
+    const [icp, searchPlan] = await Promise.all([
+      buildICP(project, intelligence, valueChain, config),
+      generateSearchPlan(project, intelligence, valueChain, null, config),
+    ])
     const planEntries = flattenSearchPlan(searchPlan)
+    stage = 'buyer_search'
     const rawResults = await executeSearch(searchPlan, config)
     const normalizedCompanies = normalizeResults(rawResults, project.website)
+    stage = 'commercial_judgement'
     const opportunities = await scoreCompanies(
       project,
       intelligence,
+      valueChain,
       icp,
       normalizedCompanies,
       targetCount,
       config,
     )
+    const warnings = [
+      ...(config.diagnostics || []).map((diagnostic) => `Stage fallback: ${diagnostic}`),
+      ...intelligence.evidence_gaps.map((gap) => `Factory data gap: ${gap}`),
+      ...(rawResults.length === 0 ? ['No search results were returned; check search credentials or factory inputs.'] : []),
+      ...(normalizedCompanies.length === 0 && rawResults.length > 0
+        ? ['Search results were found, but none passed company normalization.']
+        : []),
+      ...(opportunities.length === 0 && normalizedCompanies.length > 0
+        ? ['Candidates were found, but none had enough evidence to pass the Commercial Judge.']
+        : []),
+    ].filter(uniqueWarning).slice(0, 12)
 
     const profile = {
       partner_name: project.partnerName,
@@ -104,6 +136,7 @@ Deno.serve(async (request) => {
         opportunities.map((opportunity) => opportunity.opportunity_type),
       )],
     }
+    stage = 'result_persistence'
     const { error: updateError } = await supabase
       .from('prospecting_projects')
       .update({
@@ -115,7 +148,9 @@ Deno.serve(async (request) => {
         settings: {
           ...projectSettings,
           profile,
+          factory_intelligence: intelligence,
           company_intelligence: intelligence,
+          value_chain: valueChain,
           icp,
           search_plan_summary: Object.fromEntries(
             Object.entries(searchPlan).map(([category, queries]) => [
@@ -124,11 +159,15 @@ Deno.serve(async (request) => {
             ]),
           ),
           searched_sources: rawResults.length,
-          profile_source: 'commercial_intelligence_v2',
+          last_run_warnings: warnings,
+          last_error: null,
+          profile_source: 'factory_export_agent_v3',
         },
       })
       .eq('id', projectId)
-    if (updateError) throw new Error(updateError.message)
+    if (updateError) {
+      throw new HttpError(500, updateError.message, updateError.code || 'RESULT_SAVE_FAILED')
+    }
 
     // Keep the existing frontend API unchanged; richer scoring fields are additive.
     const response: FindOpportunitiesResponse = {
@@ -136,10 +175,19 @@ Deno.serve(async (request) => {
       queries: planEntries.map((entry) => entry.query),
       searched_sources: rawResults.length,
       opportunities,
+      factory_profile: intelligence,
+      value_chain: valueChain,
+      icp,
+      warnings,
     }
     return json(response)
   } catch (error) {
-    console.error('find-opportunities failed:', error)
+    const failure = normalizeFailure(error)
+    console.error('find-opportunities failed:', {
+      stage,
+      code: failure.code,
+      message: failure.message,
+    })
     if (supabase && projectId) {
       await supabase
         .from('prospecting_projects')
@@ -147,19 +195,41 @@ Deno.serve(async (request) => {
           status: 'failed',
           settings: {
             ...projectSettings,
-            last_error: error instanceof Error ? error.message : 'Unknown error',
+            last_error: failure.message,
+            last_error_code: failure.code,
+            last_error_stage: stage,
+            last_error_at: new Date().toISOString(),
           },
         })
         .eq('id', projectId)
     }
-    return json({ error: error instanceof Error ? error.message : 'Unknown error' }, 400)
+    return json({
+      error: failure.message,
+      code: failure.code,
+      stage,
+      retryable: failure.retryable,
+    }, failure.status)
   }
 })
 
 function requiredEnvironmentVariable(name: string): string {
   const value = Deno.env.get(name)
-  if (!value) throw new Error(`${name} is not configured in Supabase Edge Function secrets`)
+  if (!value) {
+    throw new HttpError(
+      500,
+      `${name} is not configured in Supabase Edge Function secrets`,
+      'MISSING_SERVER_CONFIGURATION',
+    )
+  }
   return value
+}
+
+async function readRequestBody(request: Request): Promise<unknown> {
+  try {
+    return await request.json()
+  } catch {
+    throw new HttpError(400, 'Request body must be valid JSON', 'INVALID_JSON')
+  }
 }
 
 function boundedInteger(
@@ -179,3 +249,43 @@ function json(body: unknown, status = 200): Response {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   })
 }
+
+class HttpError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+    readonly code: string,
+    readonly retryable = status >= 500,
+  ) {
+    super(message)
+    this.name = 'HttpError'
+  }
+}
+
+function normalizeFailure(error: unknown): {
+  status: number
+  code: string
+  message: string
+  retryable: boolean
+} {
+  if (error instanceof HttpError) {
+    return {
+      status: error.status,
+      code: error.code,
+      message: error.message,
+      retryable: error.retryable,
+    }
+  }
+  return {
+    status: 500,
+    code: 'UNEXPECTED_ERROR',
+    message: error instanceof Error ? error.message : 'Unknown error',
+    retryable: true,
+  }
+}
+
+function uniqueWarning(value: string, index: number, values: string[]): boolean {
+  return Boolean(value) &&
+    values.findIndex((item) => item.toLowerCase() === value.toLowerCase()) === index
+}
+
