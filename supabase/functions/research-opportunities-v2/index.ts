@@ -1,0 +1,1 @@
+// Keep the frontend function slug while sharing the V2 commercial intelligence engine.\nimport '../find-opportunities/index.ts'\n
