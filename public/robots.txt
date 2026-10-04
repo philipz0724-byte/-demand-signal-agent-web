@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 
 # This public experiment intentionally allows AI/search discovery.
-# Add a Sitemap line after a production domain is connected.
+Sitemap: https://philipz0724-byte.github.io/-demand-signal-agent-web/sitemap.xml
