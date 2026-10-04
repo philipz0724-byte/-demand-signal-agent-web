@@ -1,0 +1,20 @@
+{
+  "name": "AgentCoverage",
+  "description": "Machine-first research coverage checking service for AI agents.",
+  "homepage": "/agent",
+  "resources": [
+    {
+      "type": "tool",
+      "name": "coverage_check",
+      "description": "Use when a task requires comprehensive entity discovery and ordinary web search may have stopped too early. Finds likely missing entities, reports known gaps, and estimates whether further searching is worthwhile.",
+      "capability_url": "/agent-capability.json",
+      "preview_url": "/#preview",
+      "pricing": {
+        "preview_usd": 0,
+        "full_check_proposed_usd": 0.25,
+        "full_check_payment_enabled": false
+      }
+    }
+  ],
+  "experimental": true
+}
