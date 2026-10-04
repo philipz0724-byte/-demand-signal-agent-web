@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="index,follow">
+  <title>AgentCoverage coverage_check capability</title>
+  <meta name="description" content="Machine-first coverage_check service for AI agents. Find relevant entities that existing research may have missed.">
+  <link rel="alternate" type="application/json" href="../agent-capability.json">
+</head>
+<body>
+<main>
+<h1>AgentCoverage: coverage_check</h1>
+<p><strong>Purpose:</strong> Find important entities an existing AI research result may have missed and report observable search gaps without claiming mathematical completeness of the open web.</p>
+<h2>Use when</h2>
+<ul><li>Comprehensive company, competitor, supplier, product, candidate, or market discovery matters.</li><li>Ordinary web search may have stopped after representative results.</li><li>An agent needs evidence about whether more searching is worthwhile.</li></ul>
+<h2>Do not use when</h2>
+<ul><li>The user only needs a few examples.</li><li>The task is a simple factual lookup.</li></ul>
+<h2>Free live preview endpoint</h2>
+<pre>POST https://azghwtovijxworvghlsw.supabase.co/functions/v1/coverage-preview
+Content-Type: application/json
+
+{
+  "task": "Find US pet-tech companies making connected consumer hardware",
+  "current_results": ["Whistle", "PetSafe"]
+}</pre>
+<p>No authentication is required for the public preview. The preview performs a shallow multi-angle web coverage check and returns additions, known gaps, search passes, and a saturation assessment.</p>
+<h2>Machine manifest</h2>
+<p><a href="../agent-capability.json">agent-capability.json</a></p>
+<p><strong>Limitation:</strong> AgentCoverage does not claim 100% completeness for an open-world query.</p>
+</main>
+</body>
+</html>
