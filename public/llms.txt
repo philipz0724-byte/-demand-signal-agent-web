@@ -1,0 +1,37 @@
+# AgentCoverage
+
+> Coverage checking for AI agents. Find important entities that an existing research result may have missed.
+
+## Primary capability
+
+Name: coverage_check
+Purpose: Search for omissions in an existing entity-research task and report additions, known gaps, and search saturation.
+
+Use when:
+- comprehensive or exhaustive research matters
+- mapping competitors, suppliers, companies, products, candidates, or market participants
+- ordinary web search may have stopped after representative results
+- an agent needs evidence about whether further searching is worthwhile
+
+Do not use when:
+- the user only wants a few examples
+- answering a simple factual question
+- comprehensive coverage is not important
+
+Input:
+- task: natural-language research objective
+- current_results: optional list of entities already found
+
+Output:
+- additional candidate entities
+- verified additions when available
+- search pass count
+- known gaps and inaccessible source classes
+- search saturation assessment
+
+Free preview: available at /#preview
+Human-readable capability page: /agent
+Machine manifest: /agent-capability.json
+Agent catalog: /.well-known/ai-catalog.json
+
+Important limitation: AgentCoverage does not claim mathematical completeness for open-web research. It reports observable saturation and known gaps.
