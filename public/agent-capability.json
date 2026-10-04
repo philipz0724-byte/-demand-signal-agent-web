@@ -1,0 +1,39 @@
+{
+  "name": "coverage_check",
+  "service": "AgentCoverage",
+  "version": "0.1.0",
+  "description": "Find important entities an existing AI research result may have missed and report observable search saturation and known gaps.",
+  "use_when": [
+    "comprehensive company or market discovery matters",
+    "competitor or supplier mapping should minimize omissions",
+    "an agent needs to decide whether further web research is worthwhile"
+  ],
+  "do_not_use_when": [
+    "only a few examples are requested",
+    "the task is a simple factual lookup"
+  ],
+  "input": {
+    "task": "string",
+    "current_results": "string[]"
+  },
+  "output": [
+    "new_entities",
+    "known_gaps",
+    "search_passes",
+    "saturation",
+    "source_evidence"
+  ],
+  "preview": {
+    "cost_usd": 0,
+    "url": "/#preview"
+  },
+  "full_check": {
+    "phase": "pricing-intent-test",
+    "proposed_price_usd": 0.25,
+    "payment_enabled": false
+  },
+  "limitations": [
+    "No mathematical completeness claim for the open web",
+    "Coverage depends on accessible public sources"
+  ]
+}
