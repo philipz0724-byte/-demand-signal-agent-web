@@ -1,40 +1,38 @@
 {
   "specVersion": "0.91",
-  "host": {
-    "displayName": "AgentCoverage",
-    "identifier": "philipz0724-byte.github.io"
-  },
-  "entries": [
-    {
-      "identifier": "urn:air:philipz0724-byte.github.io:skill:coverage-check",
-      "displayName": "AgentCoverage Coverage Check",
-      "type": "application/ai-skill",
-      "data": {
-        "name": "coverage_check",
-        "description": "Find important entities an existing AI research result may have missed and report observable search saturation and known gaps.",
-        "input": ["task", "current_results"],
-        "output": ["new_entities", "known_gaps", "search_passes", "saturation", "source_evidence"],
-        "limitations": ["No mathematical completeness claim for open-web research"]
-      },
-      "description": "Use when comprehensive entity discovery matters and ordinary web search may have stopped too early.",
-      "tags": ["research", "coverage", "search", "entity-discovery"],
-      "capabilities": ["coverage-checking", "missing-entity-discovery", "research-gap-analysis"],
-      "representativeQueries": [
-        "What important companies did my research miss?",
-        "Check whether this competitor list is missing major players",
-        "Find additional suppliers beyond the ones I already found",
-        "Is it worth continuing this search for more entities?"
-      ],
-      "version": "0.1.0",
-      "metadata": {
-        "previewCostUsd": 0,
-        "proposedFullCheckUsd": 0.25,
-        "paymentEnabled": false,
-        "phase": "public-discovery-experiment",
-        "publicUrl": "https://philipz0724-byte.github.io/-demand-signal-agent-web/",
-        "catalogUrl": "https://philipz0724-byte.github.io/-demand-signal-agent-web/.well-known/ai-catalog.json",
-        "note": "GitHub Pages project-site path is used for the first experiment. A custom root domain can be added later for strict domain-anchored discovery."
-      }
+  "host": {"displayName": "AgentCoverage", "identifier": "philipz0724-byte.github.io"},
+  "entries": [{
+    "identifier": "urn:air:philipz0724-byte.github.io:skill:coverage-check",
+    "displayName": "AgentCoverage Coverage Check",
+    "type": "application/ai-skill",
+    "data": {
+      "name": "coverage_check",
+      "description": "Find important entities an existing AI research result may have missed and report observable search saturation and known gaps.",
+      "input": ["task", "current_results"],
+      "output": ["new_entities_found", "verified_new_entities", "sample_new_entities", "known_gaps", "search_passes", "saturation"],
+      "endpoint": "https://azghwtovijxworvghlsw.supabase.co/functions/v1/coverage-preview",
+      "method": "POST",
+      "previewCostUsd": 0,
+      "limitations": ["No mathematical completeness claim for open-web research"]
+    },
+    "description": "Use when comprehensive entity discovery matters and ordinary web search may have stopped too early.",
+    "tags": ["research", "coverage", "search", "entity-discovery"],
+    "capabilities": ["coverage-checking", "missing-entity-discovery", "research-gap-analysis"],
+    "representativeQueries": [
+      "What important companies did my research miss?",
+      "Check whether this competitor list is missing major players",
+      "Find additional suppliers beyond the ones I already found",
+      "Is it worth continuing this search for more entities?"
+    ],
+    "version": "0.2.0",
+    "metadata": {
+      "previewCostUsd": 0,
+      "proposedFullCheckUsd": 0.25,
+      "paymentEnabled": false,
+      "phase": "public-discovery-experiment",
+      "publicUrl": "https://philipz0724-byte.github.io/-demand-signal-agent-web/",
+      "catalogUrl": "https://philipz0724-byte.github.io/-demand-signal-agent-web/.well-known/ai-catalog.json",
+      "note": "GitHub Pages project-site path is used for the first experiment. A custom root domain can be added later for strict domain-anchored discovery."
     }
-  ]
+  }]
 }
