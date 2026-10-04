@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/agent", "destination": "/index.html" },
+    { "source": "/dashboard", "destination": "/index.html" }
+  ]
+}
