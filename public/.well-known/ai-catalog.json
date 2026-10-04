@@ -2,11 +2,11 @@
   "specVersion": "0.91",
   "host": {
     "displayName": "AgentCoverage",
-    "identifier": "REPLACE_WITH_DEPLOYMENT_DOMAIN"
+    "identifier": "philipz0724-byte.github.io"
   },
   "entries": [
     {
-      "identifier": "urn:air:REPLACE_WITH_DEPLOYMENT_DOMAIN:skill:coverage-check",
+      "identifier": "urn:air:philipz0724-byte.github.io:skill:coverage-check",
       "displayName": "AgentCoverage Coverage Check",
       "type": "application/ai-skill",
       "data": {
@@ -31,7 +31,9 @@
         "proposedFullCheckUsd": 0.25,
         "paymentEnabled": false,
         "phase": "public-discovery-experiment",
-        "setupNote": "Replace REPLACE_WITH_DEPLOYMENT_DOMAIN with the exact production domain before treating this as a conformant domain-anchored ARD catalog."
+        "publicUrl": "https://philipz0724-byte.github.io/-demand-signal-agent-web/",
+        "catalogUrl": "https://philipz0724-byte.github.io/-demand-signal-agent-web/.well-known/ai-catalog.json",
+        "note": "GitHub Pages project-site path is used for the first experiment. A custom root domain can be added later for strict domain-anchored discovery."
       }
     }
   ]
