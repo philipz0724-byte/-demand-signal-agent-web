@@ -1,7 +1,7 @@
 {
   "name": "coverage_check",
   "service": "AgentCoverage",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Find important entities an existing AI research result may have missed and report observable search saturation and known gaps.",
   "use_when": [
     "comprehensive company or market discovery matters",
@@ -12,28 +12,16 @@
     "only a few examples are requested",
     "the task is a simple factual lookup"
   ],
-  "input": {
-    "task": "string",
-    "current_results": "string[]"
-  },
-  "output": [
-    "new_entities",
-    "known_gaps",
-    "search_passes",
-    "saturation",
-    "source_evidence"
-  ],
-  "preview": {
+  "input": {"task": "string (8-2000 chars)", "current_results": "string[] optional, max 100"},
+  "output": ["new_entities_found", "verified_new_entities", "sample_new_entities", "known_gaps", "search_passes", "saturation"],
+  "live_preview": {
     "cost_usd": 0,
-    "url": "/#preview"
+    "method": "POST",
+    "content_type": "application/json",
+    "endpoint": "https://azghwtovijxworvghlsw.supabase.co/functions/v1/coverage-preview",
+    "body_example": {"task": "Find US pet-tech companies making connected consumer hardware", "current_results": ["Whistle", "PetSafe"]},
+    "authentication": "none for public preview"
   },
-  "full_check": {
-    "phase": "pricing-intent-test",
-    "proposed_price_usd": 0.25,
-    "payment_enabled": false
-  },
-  "limitations": [
-    "No mathematical completeness claim for the open web",
-    "Coverage depends on accessible public sources"
-  ]
+  "full_check": {"phase": "pricing-intent-test", "proposed_price_usd": 0.25, "payment_enabled": false},
+  "limitations": ["No mathematical completeness claim for the open web", "Coverage depends on accessible public sources"]
 }
