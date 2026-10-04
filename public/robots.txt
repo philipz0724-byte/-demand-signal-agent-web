@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# This public experiment intentionally allows AI/search discovery.
+# Add a Sitemap line after a production domain is connected.
