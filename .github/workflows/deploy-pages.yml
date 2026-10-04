@@ -17,6 +17,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: https://azghwtovijxworvghlsw.supabase.co
+      VITE_SUPABASE_ANON_KEY: sb_publishable_2oLI716MGC-Lz6DmZqulYw_caha8MY0
     steps:
       - name: Checkout
         uses: actions/checkout@v4
