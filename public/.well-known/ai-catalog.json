@@ -1,20 +1,38 @@
 {
-  "name": "AgentCoverage",
-  "description": "Machine-first research coverage checking service for AI agents.",
-  "homepage": "/agent",
-  "resources": [
+  "specVersion": "0.91",
+  "host": {
+    "displayName": "AgentCoverage",
+    "identifier": "REPLACE_WITH_DEPLOYMENT_DOMAIN"
+  },
+  "entries": [
     {
-      "type": "tool",
-      "name": "coverage_check",
-      "description": "Use when a task requires comprehensive entity discovery and ordinary web search may have stopped too early. Finds likely missing entities, reports known gaps, and estimates whether further searching is worthwhile.",
-      "capability_url": "/agent-capability.json",
-      "preview_url": "/#preview",
-      "pricing": {
-        "preview_usd": 0,
-        "full_check_proposed_usd": 0.25,
-        "full_check_payment_enabled": false
+      "identifier": "urn:air:REPLACE_WITH_DEPLOYMENT_DOMAIN:skill:coverage-check",
+      "displayName": "AgentCoverage Coverage Check",
+      "type": "application/ai-skill",
+      "data": {
+        "name": "coverage_check",
+        "description": "Find important entities an existing AI research result may have missed and report observable search saturation and known gaps.",
+        "input": ["task", "current_results"],
+        "output": ["new_entities", "known_gaps", "search_passes", "saturation", "source_evidence"],
+        "limitations": ["No mathematical completeness claim for open-web research"]
+      },
+      "description": "Use when comprehensive entity discovery matters and ordinary web search may have stopped too early.",
+      "tags": ["research", "coverage", "search", "entity-discovery"],
+      "capabilities": ["coverage-checking", "missing-entity-discovery", "research-gap-analysis"],
+      "representativeQueries": [
+        "What important companies did my research miss?",
+        "Check whether this competitor list is missing major players",
+        "Find additional suppliers beyond the ones I already found",
+        "Is it worth continuing this search for more entities?"
+      ],
+      "version": "0.1.0",
+      "metadata": {
+        "previewCostUsd": 0,
+        "proposedFullCheckUsd": 0.25,
+        "paymentEnabled": false,
+        "phase": "public-discovery-experiment",
+        "setupNote": "Replace REPLACE_WITH_DEPLOYMENT_DOMAIN with the exact production domain before treating this as a conformant domain-anchored ARD catalog."
       }
     }
-  ],
-  "experimental": true
+  ]
 }
